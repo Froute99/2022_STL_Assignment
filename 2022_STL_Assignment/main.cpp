@@ -19,13 +19,10 @@ class Player {
 public:
 	Player() = default;
 	Player(std::string name, int score, int id, size_t num);
-	~Player() {
-		delete dataPtr;
-	}
 
-	void Read(std::istream& in);
+	bool Read(std::istream& in);
 	void Write(std::ostream& out) const;
-	void Show();
+	void Show() const;
 
 	std::string GetName() const { return name; }
 	int GetScore() const { return score; }
@@ -33,6 +30,7 @@ public:
 	size_t GetNum() const { return num; }
 
 	bool operator==(const int id) const { return this->id == id; }
+	//bool operator<(const std::string name) { return this->name < name; }
 private:
 	std::string name;
 	int score;
@@ -42,7 +40,7 @@ private:
 };
 
 namespace {
-	const int objectNumber = 2000000;
+	constexpr int objectNumber = 2000000;
 }
 
 // helper function which print front and back found players' data
@@ -57,18 +55,19 @@ int main() {
 		return -1;
 	}
 
+
 	std::array<Player, objectNumber>* players = new std::array<Player, objectNumber>();
 
 	std::cout << "Player 정보 읽는중\n";
 
 	// 파일 읽기
 	Player player;
-	for (int i = 0; i < objectNumber; ++i) {
-		player.Read(in);
-		players->at(i) = player;
+	int i = 0;
+	while (player.Read(in)) {
+		players->at(i++) = player;
 	}
 	system("cls");		// player 정보 읽는중 메시지 지우기 위함
-	
+
 
 	// 1. 마지막 객체 출력
 	std::cout << "마지막 원소 정보 -";
@@ -81,7 +80,7 @@ int main() {
 		[](long long int sum, const Player& p) {
 			return sum + p.GetScore();
 		});
-	std::cout << std::format("{:>29}", "평균점수 : ") << total / objectNumber << std::endl;
+	std::cout << "평균점수 : " << std::fixed << double(total) / objectNumber << std::endl;
 
 
 	// 3. 바이트 수 999
@@ -95,6 +94,7 @@ int main() {
 			return false;
 		});
 	std::cout << "자원수 999인 플레이어 개수 : " << count << std::endl;
+	out.close();		// 프로그램 종료전에 파일 작성을 끝내기 위함!!!
 
 
 	// 4. id 입력
@@ -111,22 +111,37 @@ int main() {
 			continue;
 		}
 
-		std::array<Player, objectNumber>::iterator found =
-			std::find(players->begin(), players->end(), idToFind);
 
-		// 존재하지 않는 id
-		if (found == players->end()) {
-			std::cout <<
-				"\t아이디가 " << idToFind << " 인 플레이어는 존재하지 않습니다\n";
-			continue;
-		}
-
-		// sort by id
-		std::cout << "\n아이디 오름차순\n\n";
 		std::sort(players->begin(), players->end(),
 			[](const Player& p1, const Player& p2) {
 				return p1.GetId() < p2.GetId();
 			});
+
+		std::array<Player, objectNumber>::iterator found =
+			std::find(players->begin(), players->end(), idToFind);
+
+		auto pair = std::equal_range(players->begin(), players->end(), idToFind);
+
+		while (pair.first != pair.second) {
+			std::cout << &pair.first;
+			++pair.first;
+		}
+
+		// 존재하지 않는 id
+		//if (found == players->end()) {
+		//	std::cout <<
+		//		"\t아이디가 " << idToFind << " 인 플레이어는 존재하지 않습니다\n";
+		//	continue;
+		//}
+
+		// sort by id
+		std::cout << "\n아이디 오름차순\n\n";
+		//std::sort(players->begin(), players->end(),
+		//	[](const Player& p1, const Player& p2) {
+		//		return p1.GetId() < p2.GetId();
+		//	});
+
+
 		found = std::find(players->begin(), players->end(), idToFind);
 		auto it = found;
 
@@ -165,10 +180,13 @@ int main() {
 Player::Player(std::string name, int score, int id, size_t num)
 	: name(name), score(score), id(id), num(num), dataPtr(nullptr) {}
 
-void Player::Read(std::istream& in) {
-	in.read((char*)this, sizeof(Player));
-	dataPtr = new char[num];
-	in.read(dataPtr, num);
+bool Player::Read(std::istream& in) {
+	if (in.read((char*)this, sizeof(Player))) {
+		dataPtr = new char[num];
+		in.read(dataPtr, num);
+		return true;
+	}
+	return false;
 }
 
 void Player::Write(std::ostream& out) const {
@@ -176,7 +194,7 @@ void Player::Write(std::ostream& out) const {
 	out.write((char*)dataPtr, num);
 }
 
-void Player::Show() {
+void Player::Show() const {
 	std::cout << std::format("  이름: {:<17} ", name)
 		<< std::format("아이디: {:<7} ", id)
 		<< std::format("점수: {:<10} ", score)
