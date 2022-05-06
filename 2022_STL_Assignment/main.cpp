@@ -30,13 +30,18 @@ public:
 	size_t GetNum() const { return num; }
 
 	bool operator==(const int id) const { return this->id == id; }
-	//bool operator<(const std::string name) { return this->name < name; }
+	//bool operator<(const int id) const { return this->id < id; }
 private:
 	std::string name;
 	int score;
 	int id;
 	size_t num;
 	char* dataPtr;
+};
+
+struct Comp {
+	bool operator()(const Player& p, const int i) const { return p.GetId() < i; }
+	bool operator()(const int i, const Player& p) const { return i < p.GetId(); }
 };
 
 namespace {
@@ -111,7 +116,7 @@ int main() {
 			continue;
 		}
 
-
+		// sort by id
 		std::sort(players->begin(), players->end(),
 			[](const Player& p1, const Player& p2) {
 				return p1.GetId() < p2.GetId();
@@ -120,59 +125,55 @@ int main() {
 		std::array<Player, objectNumber>::iterator found =
 			std::find(players->begin(), players->end(), idToFind);
 
-		auto pair = std::equal_range(players->begin(), players->end(), idToFind);
+		auto pair = std::equal_range(players->begin(), players->end(), idToFind, Comp());
+		
+		// 존재하지 않는 id
+		if (pair.first == pair.second) {
+			std::cout <<
+				"\t아이디가 " << idToFind << " 인 플레이어는 존재하지 않습니다\n";
+			continue;
+		}
 
+		// 앞뒤로 출력 + 테두리 체크
+		std::cout << "\n아이디 오름차순\n\n";
 		while (pair.first != pair.second) {
-			std::cout << &pair.first;
+			pair.first->Show();
 			++pair.first;
 		}
 
-		// 존재하지 않는 id
-		//if (found == players->end()) {
-		//	std::cout <<
-		//		"\t아이디가 " << idToFind << " 인 플레이어는 존재하지 않습니다\n";
-		//	continue;
-		//}
+		pair = std::equal_range(players->begin(), players->end(), idToFind, Comp());
 
-		// sort by id
-		std::cout << "\n아이디 오름차순\n\n";
+		//found = std::find(players->begin(), players->end(), idToFind);
+		//auto it = found;
+
+		//int count = 0;
+		//// 중복 id 출력 std::find로 찾으면 가장 앞에 있는 놈부터 찾기 때문에 뒤로만 중복 체크하면됌
+		//if (players->begin() <= it && it < players->end()) {
+		//	while (it->GetId() == idToFind) {
+		//		FoundPlayerPrintHelper(players, it++);
+		//		++count;
+		//	}
+		//}
+		//std::cout << "\tID가 " << idToFind << " 인 객체는 " << count << "개 입니다.\n\n";
+
+		//// sort by name
+		//std::cout << "\n이름 오름차순\n\n";
 		//std::sort(players->begin(), players->end(),
 		//	[](const Player& p1, const Player& p2) {
-		//		return p1.GetId() < p2.GetId();
+		//		return p1.GetName() < p2.GetName();
 		//	});
+		//found = std::find(players->begin(), players->end(), idToFind);
+		//FoundPlayerPrintHelper(players, found);
 
 
-		found = std::find(players->begin(), players->end(), idToFind);
-		auto it = found;
-
-		int count = 0;
-		// 중복 id 출력 std::find로 찾으면 가장 앞에 있는 놈부터 찾기 때문에 뒤로만 중복 체크하면됌
-		if (players->begin() <= it && it < players->end()) {
-			while (it->GetId() == idToFind) {
-				FoundPlayerPrintHelper(players, it++);
-				++count;
-			}
-		}
-		std::cout << "\tID가 " << idToFind << " 인 객체는 " << count << "개 입니다.\n\n";
-
-		// sort by name
-		std::cout << "\n이름 오름차순\n\n";
-		std::sort(players->begin(), players->end(),
-			[](const Player& p1, const Player& p2) {
-				return p1.GetName() < p2.GetName();
-			});
-		found = std::find(players->begin(), players->end(), idToFind);
-		FoundPlayerPrintHelper(players, found);
-
-
-		// sort by score
-		std::cout << "\n점수 오름차순\n\n";
-		std::sort(players->begin(), players->end(),
-			[](const Player& p1, const Player& p2) {
-				return p1.GetScore() < p2.GetScore();
-			});
-		found = std::find(players->begin(), players->end(), idToFind);
-		FoundPlayerPrintHelper(players, found);
+		//// sort by score
+		//std::cout << "\n점수 오름차순\n\n";
+		//std::sort(players->begin(), players->end(),
+		//	[](const Player& p1, const Player& p2) {
+		//		return p1.GetScore() < p2.GetScore();
+		//	});
+		//found = std::find(players->begin(), players->end(), idToFind);
+		//FoundPlayerPrintHelper(players, found);
 	} while (true);
 }
 
@@ -207,8 +208,9 @@ void FoundPlayerPrintHelper(const std::array<Player, objectNumber>* a, const std
 	if (found > a->begin())
 		(found - 1)->Show();
 	else
-		std::cout << "  아이디가 "
-		<< found->GetId() << "인 객체는 첫번째 객체입니다\n";
+		//std::cout << "  아이디가 "
+		//<< found->GetId() << "인 객체는 첫번째 객체입니다\n";
+		std::cout << "===============================================================\n";
 
 	// 본인
 	found->Show();
@@ -217,8 +219,9 @@ void FoundPlayerPrintHelper(const std::array<Player, objectNumber>* a, const std
 	if (found < a->end())
 		(found + 1)->Show();
 	else
-		std::cout << "  아이디가 "
-		<< found->GetId() << "인 객체는 마지막 객체입니다\n";
+		//std::cout << "  아이디가 "
+		//<< found->GetId() << "인 객체는 마지막 객체입니다\n";
+		std::cout << "===============================================================\n";
 
 	std::cout << std::endl;
 }
