@@ -17,7 +17,7 @@
 
 class Player {
 public:
-	Player() = default;
+	Player() : name{}, score(0), id(0), num(0), dataPtr(nullptr) {}
 	Player(std::string name, int score, int id, size_t num);
 
 	bool Read(std::istream& in);
@@ -30,7 +30,6 @@ public:
 	size_t GetNum() const { return num; }
 
 	bool operator==(const int id) const { return this->id == id; }
-	bool operator<(const int id) const { return this->id < id; }
 private:
 	std::string name;
 	int score;
@@ -107,16 +106,13 @@ int main() {
 	int idToFind;
 	do {
 		std::cout << "\n찾고 싶은 Id를 입력하세요: ";
-		std::cin >> idToFind;
-
-		// 잘못된 입력일때 ex) 최대값을 넘는 정수, 문자 등
-		if (std::cin.fail()) {
-			std::cout << "\t입력이 잘못 되었습니다!" << std::endl;
+		if (!(std::cin >> idToFind)) {
 			std::cin.clear();
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cout << "\t입력이 잘못 되었습니다!\n";
 			continue;
 		}
-
+		
 		// sort by id
 		if (!sortedById) {
 			std::sort(players->begin(), players->end(),
@@ -206,8 +202,6 @@ void FoundPlayerPrintHelper(const std::array<Player, objectNumber>::const_iterat
 	if (found > b)
 		(found - 1)->Show();
 	else
-		//std::cout << "  아이디가 "
-		//<< found->GetId() << "인 객체는 첫번째 객체입니다\n";
 		std::cout << "===============================================================\n";
 
 	// 본인
@@ -217,8 +211,6 @@ void FoundPlayerPrintHelper(const std::array<Player, objectNumber>::const_iterat
 	if (found < e)
 		(found + 1)->Show();
 	else
-		//std::cout << "  아이디가 "
-		//<< found->GetId() << "인 객체는 마지막 객체입니다\n";
 		std::cout << "===============================================================\n";
 
 	std::cout << std::endl;
